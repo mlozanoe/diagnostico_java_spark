@@ -22,8 +22,12 @@ public class Transformer extends Writer {
 
         df.printSchema();
 
-        df = cleanData(df);
-        df = exampleWindowFunction(df);
+        //df = cleanData(df);
+        //df = exampleWindowFunction(df);
+        //df = columnSelection(df);
+
+        df = functionQuestion23(df);
+        df = filterData4(df);
         df = columnSelection(df);
 
         // for show 100 records after your transformations and show the Dataset schema
@@ -31,16 +35,23 @@ public class Transformer extends Writer {
         df.printSchema();
 
         // Uncomment when you want write your final output
-        //write(df);
+        write(df);
     }
 
     private Dataset<Row> columnSelection(Dataset<Row> df) {
         return df.select(
                 shortName.column(),
-                overall.column(),
+                longName.column(),
+                age.column(),
                 heightCm.column(),
+                weightKg.column(),
+                nationality.column(),
+                clubName.column(),
+                overall.column(),
+                potential.column(),
                 teamPosition.column(),
-                catHeightByPosition.column()
+                playerCat.column(),
+                potential_vs_overall.column()
         );
     }
 
@@ -96,7 +107,37 @@ public class Transformer extends Writer {
         return df;
     }
 
+    private Dataset<Row> functionQuestion23(Dataset<Row> df) {
+        WindowSpec w = Window
+                .partitionBy(nationality.column())
+                .partitionBy(teamPosition.column())
+                .orderBy(overall.column().desc());
 
+        Column rank = rank().over(w);
+
+        Column rule = when(rank.$less(3), "A")
+                .when(rank.$less(5), "B")
+                .when(rank.$less(10), "C")
+                .otherwise("D");
+
+        df = df.withColumn(playerCat.getName(), rule);
+
+        Column rule2 = potential.column().divide(overall.column());
+        df = df.withColumn(potential_vs_overall.getName(), rule2);
+
+        return df;
+    }
+
+    private Dataset<Row> filterData4(Dataset<Row> df) {
+        df1 = df.filter(playerCat.column() == "A" || playerCat.column() == "B"));
+        df2 = df.filter(playerCat.column() == "C" && potential_vs_overall.column()>1.15);
+        df3 = df.filter(playerCat.column() == "D" && potential_vs_overall.column()>1.25);
+
+        dfunion1 = df1.union(df2);
+        dfunionall = dfunion1.union(df3);
+
+        return dfunionall;
+    }
 
 
 }
