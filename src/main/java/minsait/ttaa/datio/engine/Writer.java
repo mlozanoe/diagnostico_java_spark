@@ -11,9 +11,9 @@ abstract class Writer {
 
     static void write(Dataset<Row> df) {
         df
-                .coalesce(2)
+                .coalesce(1)
                 .write()
-                .partitionBy(teamPosition.getName())
+                .partitionBy(nationality.getName())
                 .mode(Overwrite)
                 .parquet(OUTPUT_PATH);
     }
