@@ -102,15 +102,14 @@ public class Transformer extends Writer {
                 .when(rank.$less(50), "B")
                 .otherwise("C");
 
-        df = df.withColumn(catHeightByPosition.getName(), rule);
+        //df = df.withColumn(catHeightByPosition.getName(), rule);
 
         return df;
     }
 
     private Dataset<Row> functionQuestion23(Dataset<Row> df) {
         WindowSpec w = Window
-                .partitionBy(nationality.column())
-                .partitionBy(teamPosition.column())
+                .partitionBy(nationality.column(),teamPosition.column())
                 .orderBy(overall.column().desc());
 
         Column rank = rank().over(w);
@@ -129,15 +128,15 @@ public class Transformer extends Writer {
     }
 
     private Dataset<Row> filterData4(Dataset<Row> df) {
-        df1 = df.filter(playerCat.column() == "A" || playerCat.column() == "B"));
-        df2 = df.filter(playerCat.column() == "C" && potential_vs_overall.column()>1.15);
-        df3 = df.filter(playerCat.column() == "D" && potential_vs_overall.column()>1.25);
 
-        dfunion1 = df1.union(df2);
-        dfunionall = dfunion1.union(df3);
+        Dataset<Row> df1 = df.filter(playerCat.column().equalTo("A").or(playerCat.column().equalTo("B")));
+        Dataset<Row> df2 = df.filter(playerCat.column().equalTo("C").and(potential_vs_overall.column().gt(1.15)));
+        Dataset<Row> df3 = df.filter(playerCat.column().equalTo("D").and(potential_vs_overall.column().gt(1.25)));
+
+        Dataset<Row> dfunion1 = df1.union(df2);
+        Dataset<Row> dfunionall = dfunion1.union(df3);
 
         return dfunionall;
     }
-
 
 }
